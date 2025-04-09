@@ -23,7 +23,7 @@ func FetchNewsArticles(sources []string) {
 		}
 
 		for _, link := range links {
-			articlePage, err := downloadNewsArticlePage(link.String())
+			articlePage, err := getArticlePage(link.String())
 			if err != nil {
 				log.Printf("Error downloading article from %s: %v", link, err)
 				continue
@@ -67,8 +67,8 @@ func getLinksFromRSS(source string) ([]*url.URL, error) {
 	return links, nil
 }
 
-// download article page
-func downloadNewsArticlePage(articleLink string) (string, error) {
+// get the content on the article page
+func getArticlePage(articleLink string) (string, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
