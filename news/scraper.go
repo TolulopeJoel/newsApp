@@ -1,15 +1,19 @@
 package news
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	readability "github.com/go-shiori/go-readability"
+	"github.com/tolulopejoel/newsApp/internal/database"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -29,8 +33,8 @@ func FetchNewsArticles(sources []string) {
 				continue
 			}
 
-			article, error := extractNewsArticleInfo(articlePage, link)
-			if error != nil {
+			article, err := extractNewsArticleInfo(articlePage, link)
+			if err != nil {
 				log.Printf("Error extracting article info from %s: %v", link, err)
 				continue
 			}
@@ -122,5 +126,35 @@ func extractNewsArticleInfo(articlePage string, pageURL *url.URL) (*Article, err
 
 // save extracted info to database
 func saveArticleToDB(article *Article) error {
+	if article == nil {
+		return fmt.Errorf("article cannot be nil")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		return fmt.Errorf("DB_URL environment variable is not set")
+	}
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	queries := database.New(db)
+
+	// save data to db
+	// TODO: check if article already exists in db (unique constraint)
+	_, err = queries.CreateArticle(context.TODO(), database.CreateArticleParams{
+		Title: sql.NullString{
+			String: article.Title,
+			Valid:  article.Title != "",
+		},
+		Content: article.Content,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to save article: %v", err)
+	}
+
 	return nil
 }
