@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 )
 
 // Convert sql.NullString to string
-func nullStringToString(ns sql.NullString) string {
+func NullStringToString(ns sql.NullString) string {
 	if ns.Valid {
 		return ns.String
 	}
@@ -14,7 +14,7 @@ func nullStringToString(ns sql.NullString) string {
 }
 
 // Convert sql.NullTime to time.Time
-func nullTimeToTime(nt sql.NullTime) time.Time {
+func NullTimeToTime(nt sql.NullTime) time.Time {
 	if nt.Valid {
 		return nt.Time
 	}

@@ -1,4 +1,4 @@
-package main
+package news
 
 import (
 	"time"
@@ -17,23 +17,23 @@ type Article struct {
 	UpdatedAt   time.Time
 }
 
-func databaseArticleToArticle(article database.Article) Article {
+func DatabaseArticleToArticle(article database.Article) Article {
 	return Article{
 		ID:          article.ID,
-		Title:       nullStringToString(article.Title),
-		Summary:     nullStringToString(article.Summary),
+		Title:       database.NullStringToString(article.Title),
+		Summary:     database.NullStringToString(article.Summary),
 		Content:     article.Content,
 		IsPublished: article.IsPublished,
-		PublishedAt: nullTimeToTime(article.PublishedAt),
+		PublishedAt: database.NullTimeToTime(article.PublishedAt),
 		CreatedAt:   article.CreatedAt,
 		UpdatedAt:   article.UpdatedAt,
 	}
 }
 
-func databaseArticlesToArticles(articles []database.Article) []Article {
+func DatabaseArticlesToArticles(articles []database.Article) []Article {
 	result := make([]Article, len(articles))
 	for _, article := range articles {
-		result = append(result, databaseArticleToArticle(article))
+		result = append(result, DatabaseArticleToArticle(article))
 	}
 	return result
 }

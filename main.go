@@ -9,9 +9,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
-	"github.com/tolulopejoel/newsApp/internal/database"
 
 	_ "github.com/lib/pq"
+
+	"github.com/tolulopejoel/newsApp/internal/database"
 )
 
 type apiConfig struct {

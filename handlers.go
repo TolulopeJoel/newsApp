@@ -5,15 +5,8 @@ import (
 	"net/http"
 
 	"github.com/tolulopejoel/newsApp/internal/database"
+	"github.com/tolulopejoel/newsApp/news"
 )
-
-func handleReadiness(w http.ResponseWriter, r *http.Request) {
-	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Hello, World!"})
-}
-
-func handleError(w http.ResponseWriter, r *http.Request) {
-	respondWithError(w, http.StatusBadRequest, "something went wrong")
-}
 
 func (apiCfg *apiConfig) handlerGetNews(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -34,5 +27,13 @@ func (apiCfg *apiConfig) handlerGetNews(w http.ResponseWriter, r *http.Request) 
 		articles = []database.Article{}
 	}
 
-	respondWithJSON(w, http.StatusOK, databaseArticlesToArticles(articles))
+	respondWithJSON(w, http.StatusOK, news.DatabaseArticlesToArticles(articles))
+}
+
+func handleReadiness(w http.ResponseWriter, r *http.Request) {
+	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Hello, World!"})
+}
+
+func handleError(w http.ResponseWriter, r *http.Request) {
+	respondWithError(w, http.StatusBadRequest, "something went wrong")
 }
