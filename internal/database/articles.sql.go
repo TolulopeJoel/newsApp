@@ -11,19 +11,25 @@ import (
 )
 
 const createArticle = `-- name: CreateArticle :one
-INSERT INTO articles (title, summary, content) 
-VALUES ($1, $2, $3)
-RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at
+INSERT INTO articles (source_id, title, summary, content) 
+VALUES ($1, $2, $3, $4)
+RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
 `
 
 type CreateArticleParams struct {
-	Title   sql.NullString
-	Summary sql.NullString
-	Content string
+	SourceID int32
+	Title    sql.NullString
+	Summary  sql.NullString
+	Content  string
 }
 
 func (q *Queries) CreateArticle(ctx context.Context, arg CreateArticleParams) (Article, error) {
-	row := q.db.QueryRowContext(ctx, createArticle, arg.Title, arg.Summary, arg.Content)
+	row := q.db.QueryRowContext(ctx, createArticle,
+		arg.SourceID,
+		arg.Title,
+		arg.Summary,
+		arg.Content,
+	)
 	var i Article
 	err := row.Scan(
 		&i.ID,
@@ -34,12 +40,13 @@ func (q *Queries) CreateArticle(ctx context.Context, arg CreateArticleParams) (A
 		&i.PublishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SourceID,
 	)
 	return i, err
 }
 
 const getAllArticles = `-- name: GetAllArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
 FROM articles
 ORDER BY created_at DESC
 `
@@ -62,6 +69,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 			&i.PublishedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SourceID,
 		); err != nil {
 			return nil, err
 		}
@@ -77,7 +85,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 }
 
 const getAllPublishedArticles = `-- name: GetAllPublishedArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
 FROM articles
 WHERE is_published = true
 ORDER BY created_at DESC
@@ -101,6 +109,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 			&i.PublishedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SourceID,
 		); err != nil {
 			return nil, err
 		}
@@ -116,7 +125,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 }
 
 const getArticleById = `-- name: GetArticleById :one
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
 FROM articles
 WHERE id = $1
 LIMIT 1
@@ -134,6 +143,7 @@ func (q *Queries) GetArticleById(ctx context.Context, id int32) (Article, error)
 		&i.PublishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SourceID,
 	)
 	return i, err
 }

@@ -1,6 +1,6 @@
 -- name: CreateArticle :one
-INSERT INTO articles (title, summary, content) 
-VALUES ($1, $2, $3)
+INSERT INTO articles (source_id, title, summary, content) 
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetAllArticles :many
