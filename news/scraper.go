@@ -19,7 +19,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func FetchNewsArticles(sources []string) {
+func FetchNewsArticles(sources []Source) {
 	var wg sync.WaitGroup
 
 	// Set up a single database connection to be reused
@@ -69,7 +69,7 @@ func FetchNewsArticles(sources []string) {
 					}
 
 					// Save the article to the database
-					err = saveArticleToDB(queries, article)
+					err = saveArticleToDB(queries, source, article)
 					if err != nil {
 						log.Printf("Error saving article to database: %v", err)
 					}
@@ -78,9 +78,8 @@ func FetchNewsArticles(sources []string) {
 
 			// Wait for all articles from this source to finish
 			articleWg.Wait()
-		}(source)
+		}(source.FeedUrl)
 	}
-
 	// Wait for all sources to complete
 	wg.Wait()
 }
@@ -152,7 +151,8 @@ func extractNewsArticleInfo(articlePage string, pageURL *url.URL) (*Article, err
 		pageURL,
 	)
 	if err != nil {
-		log.Fatalf("Failed to parse article content: %v", err)
+		log.Printf("Failed to parse article content: %v", err)
+		return nil, err
 	}
 
 	return &Article{
@@ -162,7 +162,7 @@ func extractNewsArticleInfo(articlePage string, pageURL *url.URL) (*Article, err
 }
 
 // save extracted info to database
-func saveArticleToDB(queries *database.Queries, article *Article) error {
+func saveArticleToDB(queries *database.Queries, source Source, article *Article) error {
 	if article == nil {
 		return fmt.Errorf("article cannot be nil")
 	}
@@ -170,6 +170,7 @@ func saveArticleToDB(queries *database.Queries, article *Article) error {
 	// save data to db
 	// TODO: check if article already exists in db (unique constraint)
 	_, err := queries.CreateArticle(context.TODO(), database.CreateArticleParams{
+		SourceID: source.ID,
 		Title: sql.NullString{
 			String: article.Title,
 			Valid:  article.Title != "",
