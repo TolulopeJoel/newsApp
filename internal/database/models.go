@@ -18,4 +18,12 @@ type Article struct {
 	PublishedAt sql.NullTime
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	SourceID    int32
+}
+
+type Source struct {
+	ID        int32
+	Name      sql.NullString
+	FeedUrl   sql.NullString
+	CreatedAt time.Time
 }
