@@ -19,6 +19,7 @@ type Article struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	SourceID    int32
+	ImageUrl    sql.NullString
 }
 
 type Source struct {

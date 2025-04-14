@@ -13,7 +13,7 @@ import (
 const createArticle = `-- name: CreateArticle :one
 INSERT INTO articles (source_id, title, summary, content) 
 VALUES ($1, $2, $3, $4)
-RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
+RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url
 `
 
 type CreateArticleParams struct {
@@ -41,12 +41,13 @@ func (q *Queries) CreateArticle(ctx context.Context, arg CreateArticleParams) (A
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SourceID,
+		&i.ImageUrl,
 	)
 	return i, err
 }
 
 const getAllArticles = `-- name: GetAllArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url
 FROM articles
 ORDER BY created_at DESC
 `
@@ -70,6 +71,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.SourceID,
+			&i.ImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -85,7 +87,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 }
 
 const getAllPublishedArticles = `-- name: GetAllPublishedArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url
 FROM articles
 WHERE is_published = true
 ORDER BY created_at DESC
@@ -110,6 +112,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.SourceID,
+			&i.ImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -125,7 +128,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 }
 
 const getArticleById = `-- name: GetArticleById :one
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url
 FROM articles
 WHERE id = $1
 LIMIT 1
@@ -144,6 +147,7 @@ func (q *Queries) GetArticleById(ctx context.Context, id int32) (Article, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SourceID,
+		&i.ImageUrl,
 	)
 	return i, err
 }
