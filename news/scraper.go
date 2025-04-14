@@ -10,42 +10,79 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
-	readability "github.com/go-shiori/go-readability"
 	"github.com/tolulopejoel/newsApp/internal/database"
 
+	readability "github.com/go-shiori/go-readability"
 	"github.com/mmcdole/gofeed"
 )
 
 func FetchNewsArticles(sources []string) {
-	for _, source := range sources {
-		links, err := getLinksFromRSS(source)
-		if err != nil {
-			log.Printf("Error fetching article links from %s: %v", source, err)
-			continue
-		}
+	var wg sync.WaitGroup
 
-		for _, link := range links {
-			articlePage, err := getArticlePage(link.String())
-			if err != nil {
-				log.Printf("Error downloading article from %s: %v", link, err)
-				continue
-			}
-
-			article, err := extractNewsArticleInfo(articlePage, link)
-			if err != nil {
-				log.Printf("Error extracting article info from %s: %v", link, err)
-				continue
-			}
-
-			// Save the article to the database
-			err = saveArticleToDB(article)
-			if err != nil {
-				log.Printf("Error saving article to database: %v", err)
-			}
-		}
+	// Set up a single database connection to be reused
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL environment variable is not set")
 	}
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	queries := database.New(db)
+
+	// Process each source in its own goroutine
+	for _, source := range sources {
+		wg.Add(1)
+		go func(src string) {
+			defer wg.Done()
+
+			// Get links from RSS feed
+			links, err := getLinksFromRSS(src)
+			if err != nil {
+				log.Printf("Error fetching article links from %s: %v", src, err)
+				return
+			}
+
+			// Process each link
+			var articleWg sync.WaitGroup
+			for _, link := range links {
+				articleWg.Add(1)
+				go func(articleLink *url.URL) {
+					defer articleWg.Done()
+
+					// Get and process the article
+					articlePage, err := getArticlePage(articleLink.String())
+					if err != nil {
+						log.Printf("Error downloading article from %s: %v", articleLink, err)
+						return
+					}
+
+					article, err := extractNewsArticleInfo(articlePage, articleLink)
+					if err != nil {
+						log.Printf("Error extracting article info from %s: %v", articleLink, err)
+						return
+					}
+
+					// Save the article to the database
+					err = saveArticleToDB(queries, article)
+					if err != nil {
+						log.Printf("Error saving article to database: %v", err)
+					}
+				}(link)
+			}
+
+			// Wait for all articles from this source to finish
+			articleWg.Wait()
+		}(source)
+	}
+
+	// Wait for all sources to complete
+	wg.Wait()
 }
 
 // get articles link from news sources rss feed
@@ -125,27 +162,14 @@ func extractNewsArticleInfo(articlePage string, pageURL *url.URL) (*Article, err
 }
 
 // save extracted info to database
-func saveArticleToDB(article *Article) error {
+func saveArticleToDB(queries *database.Queries, article *Article) error {
 	if article == nil {
 		return fmt.Errorf("article cannot be nil")
 	}
 
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		return fmt.Errorf("DB_URL environment variable is not set")
-	}
-
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
-	}
-	defer db.Close()
-
-	queries := database.New(db)
-
 	// save data to db
 	// TODO: check if article already exists in db (unique constraint)
-	_, err = queries.CreateArticle(context.TODO(), database.CreateArticleParams{
+	_, err := queries.CreateArticle(context.TODO(), database.CreateArticleParams{
 		Title: sql.NullString{
 			String: article.Title,
 			Valid:  article.Title != "",
@@ -155,6 +179,5 @@ func saveArticleToDB(article *Article) error {
 	if err != nil {
 		return fmt.Errorf("failed to save article: %v", err)
 	}
-
 	return nil
 }
