@@ -20,11 +20,11 @@ type Article struct {
 func DatabaseArticleToArticle(article database.Article) Article {
 	return Article{
 		ID:          article.ID,
-		Title:       database.NullStringToString(article.Title),
-		Summary:     database.NullStringToString(article.Summary),
+		Title:       article.Title.String,
+		Summary:     article.Summary.String,
 		Content:     article.Content,
 		IsPublished: article.IsPublished,
-		PublishedAt: database.NullTimeToTime(article.PublishedAt),
+		PublishedAt: article.PublishedAt.Time,
 		CreatedAt:   article.CreatedAt,
 		UpdatedAt:   article.UpdatedAt,
 	}
