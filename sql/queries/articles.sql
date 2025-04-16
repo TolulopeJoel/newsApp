@@ -19,3 +19,9 @@ SELECT *
 FROM articles
 WHERE id = $1
 LIMIT 1;
+
+-- name: GetAllUnprocessedArticles :many
+SELECT *
+FROM articles
+WHERE is_processed = false
+ORDER BY created_at;

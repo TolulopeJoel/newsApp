@@ -130,6 +130,34 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 	return items, nil
 }
 
+const getAllUnprocessedArticles = `-- name: GetAllUnprocessedArticles :many
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+FROM articles
+WHERE is_processed = false
+ORDER BY created_at
+`
+
+func (q *Queries) GetAllUnprocessedArticles(ctx context.Context) ([]Article, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUnprocessedArticles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Article
+	for rows.Next() {
+		var i Article
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Summary,
+			&i.Content,
+			&i.IsPublished,
+			&i.PublishedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.SourceID,
+			&i.ImageUrl,
+			&i.IsProcessed,
 		); err != nil {
 			return nil, err
 		}
