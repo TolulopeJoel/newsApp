@@ -12,6 +12,7 @@ type Article struct {
 	Summary     string
 	Content     string
 	IsPublished bool
+	IsProcessed bool
 	PublishedAt time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -30,6 +31,7 @@ func DatabaseArticleToArticle(article database.Article) Article {
 		Summary:     article.Summary.String,
 		Content:     article.Content,
 		IsPublished: article.IsPublished,
+		IsProcessed: article.IsProcessed,
 		PublishedAt: article.PublishedAt.Time,
 		CreatedAt:   article.CreatedAt,
 		UpdatedAt:   article.UpdatedAt,

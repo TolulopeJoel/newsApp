@@ -20,6 +20,7 @@ type Article struct {
 	UpdatedAt   time.Time
 	SourceID    int32
 	ImageUrl    sql.NullString
+	IsProcessed bool
 }
 
 type Source struct {
