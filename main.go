@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -13,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/tolulopejoel/newsApp/internal/database"
+	"github.com/tolulopejoel/newsApp/news"
 )
 
 type apiConfig struct {
@@ -64,6 +67,39 @@ func main() {
 		Handler: router,
 	}
 
+	go StartBackgroundWorkers(&apiCfg)
+
 	log.Println("Server running on port: " + port)
 	log.Fatal(server.ListenAndServe())
+}
+
+func StartBackgroundWorkers(cfg *apiConfig) {
+	go func() {
+		for {
+			sources, err := cfg.DB.GetAllSources(context.TODO())
+			if err != nil {
+				log.Println("Can't get news sources from database", err)
+			}
+
+			formatted := news.DatabaseSourcesToSources(sources)
+			news.FetchNewsArticles(formatted)
+
+			time.Sleep(1 * time.Hour)
+		}
+	}()
+
+	go func() {
+		for {
+			articles, err := cfg.DB.GetAllUnprocessedArticles(context.TODO())
+			if err != nil {
+				log.Println("Can't get unpublished articles from database", err)
+			}
+
+			for _, article := range articles {
+				news.Analyse(article.Content)
+			}
+
+			time.Sleep(10 * time.Minute)
+		}
+	}()
 }
