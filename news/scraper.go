@@ -170,25 +170,12 @@ func saveArticleToDB(queries *database.Queries, source Source, article *Article)
 		return fmt.Errorf("article cannot be nil")
 	}
 
-	// check if article exists in db
-	_, err := queries.GetArticleBySourceIdAndTitle(context.TODO(), database.GetArticleBySourceIdAndTitleParams{
+	return queries.UpsertArticle(context.TODO(), database.UpsertArticleParams{
 		SourceID: source.ID,
-		Title:    sql.NullString{String: article.Title, Valid: true},
+		Title: sql.NullString{
+			String: article.Title,
+			Valid:  article.Title != "",
+		},
+		Content: article.Content,
 	})
-
-	// if no article, save new article to databse
-	if err != nil {
-		_, err := queries.CreateArticle(context.TODO(), database.CreateArticleParams{
-			SourceID: source.ID,
-			Title: sql.NullString{
-				String: article.Title,
-				Valid:  article.Title != "",
-			},
-			Content: article.Content,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to save article: %v", err)
-		}
-	}
-	return nil
 }
