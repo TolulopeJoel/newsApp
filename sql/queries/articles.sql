@@ -31,3 +31,8 @@ SELECT *
 FROM articles
 WHERE source_id = $1
 AND title = $2;
+
+-- name: UpsertArticle :exec
+INSERT INTO articles (source_id, title, content)
+VALUES ($1, $2, $3)
+ON CONFLICT (source_id, title) DO NOTHING;

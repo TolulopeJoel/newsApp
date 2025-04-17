@@ -228,3 +228,20 @@ func (q *Queries) GetArticleBySourceIdAndTitle(ctx context.Context, arg GetArtic
 	)
 	return i, err
 }
+
+const upsertArticle = `-- name: UpsertArticle :exec
+INSERT INTO articles (source_id, title, content)
+VALUES ($1, $2, $3)
+ON CONFLICT (source_id, title) DO NOTHING
+`
+
+type UpsertArticleParams struct {
+	SourceID int32
+	Title    sql.NullString
+	Content  string
+}
+
+func (q *Queries) UpsertArticle(ctx context.Context, arg UpsertArticleParams) error {
+	_, err := q.db.ExecContext(ctx, upsertArticle, arg.SourceID, arg.Title, arg.Content)
+	return err
+}
