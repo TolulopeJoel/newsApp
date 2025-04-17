@@ -36,3 +36,10 @@ AND title = $2;
 INSERT INTO articles (source_id, title, content)
 VALUES ($1, $2, $3)
 ON CONFLICT (source_id, title) DO NOTHING;
+
+-- name: UpdateSummary :exec
+UPDATE articles
+SET hook_title = $2,
+    summary = $3,
+    is_processed = $4
+WHERE id = $1;

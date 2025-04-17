@@ -235,6 +235,31 @@ func (q *Queries) GetArticleBySourceIdAndTitle(ctx context.Context, arg GetArtic
 	return i, err
 }
 
+const updateSummary = `-- name: UpdateSummary :exec
+UPDATE articles
+SET hook_title = $2,
+    summary = $3,
+    is_processed = $4
+WHERE id = $1
+`
+
+type UpdateSummaryParams struct {
+	ID          int32
+	HookTitle   sql.NullString
+	Summary     sql.NullString
+	IsProcessed bool
+}
+
+func (q *Queries) UpdateSummary(ctx context.Context, arg UpdateSummaryParams) error {
+	_, err := q.db.ExecContext(ctx, updateSummary,
+		arg.ID,
+		arg.HookTitle,
+		arg.Summary,
+		arg.IsProcessed,
+	)
+	return err
+}
+
 const upsertArticle = `-- name: UpsertArticle :exec
 INSERT INTO articles (source_id, title, content)
 VALUES ($1, $2, $3)
