@@ -19,7 +19,8 @@ func Analyse(article database.Article) {
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error creating Gemini client: %v", err)
+		return
 	}
 	defer client.Close()
 
@@ -50,7 +51,8 @@ Article:
 
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error generating content: %v", err)
+		return
 	}
 
 	fmt.Println(getResponseFields(resp))
