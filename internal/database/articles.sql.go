@@ -197,3 +197,34 @@ func (q *Queries) GetArticleById(ctx context.Context, id int32) (Article, error)
 	)
 	return i, err
 }
+
+const getArticleBySourceIdAndTitle = `-- name: GetArticleBySourceIdAndTitle :one
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+FROM articles
+WHERE source_id = $1
+AND title = $2
+`
+
+type GetArticleBySourceIdAndTitleParams struct {
+	SourceID int32
+	Title    sql.NullString
+}
+
+func (q *Queries) GetArticleBySourceIdAndTitle(ctx context.Context, arg GetArticleBySourceIdAndTitleParams) (Article, error) {
+	row := q.db.QueryRowContext(ctx, getArticleBySourceIdAndTitle, arg.SourceID, arg.Title)
+	var i Article
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Summary,
+		&i.Content,
+		&i.IsPublished,
+		&i.PublishedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SourceID,
+		&i.ImageUrl,
+		&i.IsProcessed,
+	)
+	return i, err
+}

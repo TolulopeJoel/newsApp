@@ -25,3 +25,9 @@ SELECT *
 FROM articles
 WHERE is_processed = false
 ORDER BY created_at;
+
+-- name: GetArticleBySourceIdAndTitle :one
+SELECT *
+FROM articles
+WHERE source_id = $1
+AND title = $2;
