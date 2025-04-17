@@ -72,8 +72,7 @@ func FetchNewsArticles(sources []Source) {
 					}
 
 					// Save the article to the database
-					err = saveArticleToDB(queries, source, article)
-					if err != nil {
+					if err := saveArticleToDB(queries, source, article); err != nil {
 						log.Printf("Error saving article to database: %v", err)
 					}
 				}(link)
