@@ -21,6 +21,7 @@ type Article struct {
 	SourceID    int32
 	ImageUrl    sql.NullString
 	IsProcessed bool
+	HookTitle   sql.NullString
 }
 
 type Source struct {

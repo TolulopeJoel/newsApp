@@ -13,7 +13,7 @@ import (
 const createArticle = `-- name: CreateArticle :one
 INSERT INTO articles (source_id, title, summary, content) 
 VALUES ($1, $2, $3, $4)
-RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+RETURNING id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 `
 
 type CreateArticleParams struct {
@@ -43,12 +43,13 @@ func (q *Queries) CreateArticle(ctx context.Context, arg CreateArticleParams) (A
 		&i.SourceID,
 		&i.ImageUrl,
 		&i.IsProcessed,
+		&i.HookTitle,
 	)
 	return i, err
 }
 
 const getAllArticles = `-- name: GetAllArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 FROM articles
 ORDER BY created_at DESC
 `
@@ -74,6 +75,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 			&i.SourceID,
 			&i.ImageUrl,
 			&i.IsProcessed,
+			&i.HookTitle,
 		); err != nil {
 			return nil, err
 		}
@@ -89,7 +91,7 @@ func (q *Queries) GetAllArticles(ctx context.Context) ([]Article, error) {
 }
 
 const getAllPublishedArticles = `-- name: GetAllPublishedArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 FROM articles
 WHERE is_published = true
 ORDER BY created_at DESC
@@ -116,6 +118,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 			&i.SourceID,
 			&i.ImageUrl,
 			&i.IsProcessed,
+			&i.HookTitle,
 		); err != nil {
 			return nil, err
 		}
@@ -131,7 +134,7 @@ func (q *Queries) GetAllPublishedArticles(ctx context.Context) ([]Article, error
 }
 
 const getAllUnprocessedArticles = `-- name: GetAllUnprocessedArticles :many
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 FROM articles
 WHERE is_processed = false
 ORDER BY created_at
@@ -158,6 +161,7 @@ func (q *Queries) GetAllUnprocessedArticles(ctx context.Context) ([]Article, err
 			&i.SourceID,
 			&i.ImageUrl,
 			&i.IsProcessed,
+			&i.HookTitle,
 		); err != nil {
 			return nil, err
 		}
@@ -173,7 +177,7 @@ func (q *Queries) GetAllUnprocessedArticles(ctx context.Context) ([]Article, err
 }
 
 const getArticleById = `-- name: GetArticleById :one
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 FROM articles
 WHERE id = $1
 LIMIT 1
@@ -194,12 +198,13 @@ func (q *Queries) GetArticleById(ctx context.Context, id int32) (Article, error)
 		&i.SourceID,
 		&i.ImageUrl,
 		&i.IsProcessed,
+		&i.HookTitle,
 	)
 	return i, err
 }
 
 const getArticleBySourceIdAndTitle = `-- name: GetArticleBySourceIdAndTitle :one
-SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed
+SELECT id, title, summary, content, is_published, published_at, created_at, updated_at, source_id, image_url, is_processed, hook_title
 FROM articles
 WHERE source_id = $1
 AND title = $2
@@ -225,6 +230,7 @@ func (q *Queries) GetArticleBySourceIdAndTitle(ctx context.Context, arg GetArtic
 		&i.SourceID,
 		&i.ImageUrl,
 		&i.IsProcessed,
+		&i.HookTitle,
 	)
 	return i, err
 }
