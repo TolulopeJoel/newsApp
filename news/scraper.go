@@ -35,6 +35,9 @@ func FetchNewsArticles(sources []Source) {
 
 	queries := database.New(db)
 
+	log.Println("Scraping started...")
+	defer log.Println("Scraping Completed.")
+
 	// Process each source in its own goroutine
 	for _, source := range sources {
 		wg.Add(1)
