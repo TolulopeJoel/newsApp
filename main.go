@@ -116,7 +116,7 @@ func StartBackgroundWorkers(ctx context.Context, cfg *apiConfig) {
 				}
 
 				for _, article := range articles {
-					news.Analyse(article.Content)
+					news.Analyse(article)
 				}
 
 				time.Sleep(10 * time.Minute)
