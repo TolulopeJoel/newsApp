@@ -2,8 +2,8 @@ package news
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"log"
 	"os"
@@ -14,6 +14,18 @@ import (
 )
 
 func Analyse(article database.Article) {
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL environment variable is not set")
+	}
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	queries := database.New(db)
+
 	ctx := context.Background()
 	apiKey := os.Getenv("GEMINI_API_KEY")
 
@@ -55,7 +67,11 @@ Article:
 		return
 	}
 
-	fmt.Println(getResponseFields(resp))
+	hookTitle, summary := getResponseFields(resp)
+
+	if err := UpdateArticleWSummary(queries, article.ID, hookTitle, summary); err != nil {
+		log.Printf("Error updating article summary (%v): %v", article.ID, err)
+	}
 }
 
 func getResponseFields(resp *genai.GenerateContentResponse) (title string, summary string) {
@@ -70,6 +86,7 @@ func getResponseFields(resp *genai.GenerateContentResponse) (title string, summa
 	var result []map[string]string
 	if err := json.Unmarshal(byteData, &result); err != nil {
 		log.Println("Error parsing JSON:", err)
+		return
 	}
 
 	if len(result) > 0 {
@@ -78,4 +95,13 @@ func getResponseFields(resp *genai.GenerateContentResponse) (title string, summa
 	}
 
 	return
+}
+
+func UpdateArticleWSummary(queries *database.Queries, articleId int32, title, summary string) error {
+	return queries.UpdateSummary(context.TODO(), database.UpdateSummaryParams{
+		ID:          articleId,
+		HookTitle:   sql.NullString{String: title, Valid: true},
+		Summary:     sql.NullString{String: summary, Valid: true},
+		IsProcessed: title != "",
+	})
 }
