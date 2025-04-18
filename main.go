@@ -6,16 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
-
 	_ "github.com/lib/pq"
 
 	"github.com/tolulopejoel/newsApp/internal/database"
-	"github.com/tolulopejoel/newsApp/news"
 )
 
 type apiConfig struct {
@@ -70,57 +67,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// background process to scrape news articles
-	go StartBackgroundWorkers(ctx, &apiCfg)
+	// start background processes
+	go startBackgroundWorkers(ctx, &apiCfg)
 
 	// start server
 	log.Println("Server running on port: " + port)
 	log.Fatal(server.ListenAndServe())
-}
-
-func StartBackgroundWorkers(ctx context.Context, cfg *apiConfig) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Println("News sources worker shutting down")
-				return
-			default:
-				sources, err := cfg.DB.GetAllSources(ctx)
-				if err != nil {
-					log.Printf("Error getting news sources: %v", err)
-					time.Sleep(5 * time.Minute)
-					continue
-				}
-
-				formatted := news.DatabaseSourcesToSources(sources)
-				news.FetchNewsArticles(formatted)
-
-				time.Sleep(1 * time.Hour)
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Println("Article processing worker shutting down")
-				return
-			default:
-				articles, err := cfg.DB.GetAllUnprocessedArticles(ctx)
-				if err != nil {
-					log.Printf("Error getting unprocessed articles: %v", err)
-					time.Sleep(1 * time.Minute)
-					continue
-				}
-
-				for _, article := range articles {
-					news.Analyse(article)
-				}
-
-				time.Sleep(10 * time.Minute)
-			}
-		}
-	}()
 }
