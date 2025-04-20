@@ -4,20 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-
 	"log"
-	"os"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/tolulopejoel/newsApp/internal/config"
 	"github.com/tolulopejoel/newsApp/internal/database"
 	"google.golang.org/api/option"
 )
 
 func Analyse(article database.Article, queries *database.Queries) {
+	cfg := config.LoadConfig()
 	ctx := context.Background()
-	apiKey := os.Getenv("GEMINI_API_KEY")
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	// Initialize Gemini client
+	client, err := genai.NewClient(ctx, option.WithAPIKey(cfg.GeminiKey))
 	if err != nil {
 		log.Printf("Error creating Gemini client: %v", err)
 		return

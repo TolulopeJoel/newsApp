@@ -4,23 +4,26 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
 	"github.com/tolulopejoel/newsApp/internal/api"
+	"github.com/tolulopejoel/newsApp/internal/config"
 	"github.com/tolulopejoel/newsApp/internal/database"
 	"github.com/tolulopejoel/newsApp/internal/worker"
 )
 
 func main() {
+	// Load environment variables + configs
 	godotenv.Load()
+	cfg := config.LoadConfig()
 	db := database.GetDB()
 	defer database.CloseDB()
 
 	queries := database.New(db)
+	apiCfg := &api.ApiConfig{DB: queries}
 
 	router := chi.NewRouter()
 	// CORS
@@ -40,18 +43,16 @@ func main() {
 
 	router.Mount("/v1", v1)
 
-	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: router,
-	}
-
+	// start background processes
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	// start background processes
-	go worker.StartBackgroundWorkers(ctx, apiCfg)
+	go worker.StartBackgroundWorkers(ctx, apiCfg.DB)
 
 	// start server
-	log.Println("Server running on port: " + port)
+	server := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
+	log.Println("Server running on port: " + cfg.Port)
 	log.Fatal(server.ListenAndServe())
 }
