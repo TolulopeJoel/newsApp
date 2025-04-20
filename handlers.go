@@ -27,7 +27,7 @@ func (apiCfg *apiConfig) handlerGetNews(w http.ResponseWriter, r *http.Request) 
 		articles = []database.Article{}
 	}
 
-	respondWithJSON(w, http.StatusOK, news.DatabaseArticlesToArticles(articles))
+	respondWithJSON(w, http.StatusOK, news.ConvertSlice(articles, news.DatabaseArticleToArticle))
 }
 
 func handleReadiness(w http.ResponseWriter, r *http.Request) {

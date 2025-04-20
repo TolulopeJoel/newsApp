@@ -24,7 +24,7 @@ func startBackgroundWorkers(ctx context.Context, cfg *apiConfig) {
 					continue
 				}
 
-				formatted := news.DatabaseSourcesToSources(sources)
+				formatted := news.ConvertSlice(sources, news.DatabaseSourceToSource)
 				news.FetchNewsArticles(formatted)
 
 				time.Sleep(1 * time.Hour)

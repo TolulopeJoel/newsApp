@@ -7,21 +7,25 @@ import (
 )
 
 type Article struct {
-	ID          int32 `json:"id"`
-	Title       string
-	Summary     string
-	Content     string
-	IsPublished bool
-	IsProcessed bool
-	PublishedAt time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int32     `json:"id"`
+	Title       string    `json:"title"`
+	Summary     string    `json:"summary"`
+	Content     string    `json:"content"`
+	IsPublished bool      `json:"is_published"`
+	IsProcessed bool      `json:"is_processed"`
+	PublishedAt time.Time `json:"published_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	SourceID    int32     `json:"source_id"`
+	ImageUrl    string    `json:"image_url,omitempty"`
+	HookTitle   string    `json:"hook_title,omitempty"`
 }
 
 type Source struct {
-	ID      int32 `json:"id"`
-	Name    string
-	FeedUrl string
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	FeedUrl   string    `json:"feed_url"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func DatabaseArticleToArticle(article database.Article) Article {
@@ -35,29 +39,26 @@ func DatabaseArticleToArticle(article database.Article) Article {
 		PublishedAt: article.PublishedAt.Time,
 		CreatedAt:   article.CreatedAt,
 		UpdatedAt:   article.UpdatedAt,
+		SourceID:    article.SourceID,
+		ImageUrl:    article.ImageUrl.String,
+		HookTitle:   article.HookTitle.String,
 	}
-}
-
-func DatabaseArticlesToArticles(articles []database.Article) []Article {
-	result := make([]Article, len(articles))
-	for _, article := range articles {
-		result = append(result, DatabaseArticleToArticle(article))
-	}
-	return result
 }
 
 func DatabaseSourceToSource(source database.Source) Source {
 	return Source{
-		ID:      source.ID,
-		Name:    source.Name.String,
-		FeedUrl: source.FeedUrl.String,
+		ID:        source.ID,
+		Name:      source.Name.String,
+		FeedUrl:   source.FeedUrl.String,
+		CreatedAt: source.CreatedAt,
 	}
 }
 
-func DatabaseSourcesToSources(sources []database.Source) []Source {
-	result := make([]Source, len(sources))
-	for _, source := range sources {
-		result = append(result, DatabaseSourceToSource(source))
+// ConvertSlice converts a slice of database models to a slice of domain models
+func ConvertSlice[T, U any](items []T, converter func(T) U) []U {
+	result := make([]U, 0, len(items))
+	for _, item := range items {
+		result = append(result, converter(item))
 	}
 	return result
 }
