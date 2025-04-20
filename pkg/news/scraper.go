@@ -17,25 +17,13 @@ import (
 
 	readability "github.com/go-shiori/go-readability"
 	"github.com/mmcdole/gofeed"
+
+	"github.com/tolulopejoel/newsApp/internal/database"
 )
 
-func FetchNewsArticles(sources []Source) {
+// FetchNewsArticles fetches news articles from various sources
+func FetchNewsArticles(ctx context.Context, queries *database.Queries, sources []Source) {
 	var wg sync.WaitGroup
-
-	// Set up a single database connection to be reused
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		log.Fatal("DB_URL environment variable is not set")
-	}
-
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer db.Close()
-
-	queries := database.New(db)
-
 	log.Println("Scraping started...")
 	defer log.Println("Scraping Completed.")
 

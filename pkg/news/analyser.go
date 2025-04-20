@@ -13,19 +13,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func Analyse(article database.Article) {
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		log.Fatal("DB_URL environment variable is not set")
-	}
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer db.Close()
-
-	queries := database.New(db)
-
+func Analyse(article database.Article, queries *database.Queries) {
 	ctx := context.Background()
 	apiKey := os.Getenv("GEMINI_API_KEY")
 

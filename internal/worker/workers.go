@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/tolulopejoel/newsApp/internal/api"
+	"github.com/tolulopejoel/newsApp/internal/database"
 	"github.com/tolulopejoel/newsApp/pkg/news"
 )
 
-func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
+func StartBackgroundWorkers(ctx context.Context, queries *database.Queries) {
 	// scrape for new articles
 	go func() {
 		for {
@@ -18,7 +18,7 @@ func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
 				log.Println("News sources worker shutting down")
 				return
 			default:
-				sources, err := cfg.DB.GetAllSources(ctx)
+				sources, err := queries.GetAllSources(ctx)
 				if err != nil {
 					log.Printf("Error getting news sources: %v", err)
 					time.Sleep(5 * time.Minute)
@@ -26,9 +26,9 @@ func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
 				}
 
 				formatted := news.ConvertSlice(sources, news.DatabaseSourceToSource)
-				news.FetchNewsArticles(formatted)
+				news.FetchNewsArticles(ctx, queries, formatted)
 
-				time.Sleep(1 * time.Hour)
+				time.Sleep(time.Hour)
 			}
 		}
 	}()
@@ -46,7 +46,7 @@ func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
 				log.Println("Article processing worker shutting down")
 				return
 			default:
-				articles, err := cfg.DB.GetAllUnprocessedArticles(ctx)
+				articles, err := queries.GetAllUnprocessedArticles(ctx)
 				if err != nil {
 					log.Printf("Error getting unprocessed articles: %v", err)
 					time.Sleep(1 * time.Minute)
@@ -54,7 +54,7 @@ func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
 				}
 
 				for _, article := range articles {
-					news.Analyse(article)
+					news.Analyse(article, queries)
 				}
 
 				time.Sleep(10 * time.Minute)
