@@ -12,12 +12,10 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
+	"github.com/tolulopejoel/newsApp/internal/api"
 	"github.com/tolulopejoel/newsApp/internal/database"
+	"github.com/tolulopejoel/newsApp/internal/worker"
 )
-
-type apiConfig struct {
-	DB *database.Queries
-}
 
 func main() {
 	godotenv.Load()
@@ -37,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	apiCfg := apiConfig{
+	apiCfg := &api.ApiConfig{
 		DB: database.New(db),
 	}
 
@@ -53,9 +51,9 @@ func main() {
 	}))
 	// V1 Router
 	v1 := chi.NewRouter()
-	v1.Get("/healthz", handleReadiness)
-	v1.Get("/error", handleError)
-	v1.Get("/news", apiCfg.handlerGetNews)
+	v1.Get("/healthz", api.HandleReadiness)
+	v1.Get("/error", api.HandleError)
+	v1.Get("/news", apiCfg.HandlerGetNews)
 
 	router.Mount("/v1", v1)
 
@@ -68,7 +66,7 @@ func main() {
 	defer cancel()
 
 	// start background processes
-	go startBackgroundWorkers(ctx, &apiCfg)
+	go worker.StartBackgroundWorkers(ctx, apiCfg)
 
 	// start server
 	log.Println("Server running on port: " + port)

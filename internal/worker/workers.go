@@ -1,14 +1,15 @@
-package main
+package worker
 
 import (
 	"context"
 	"log"
 	"time"
 
-	"github.com/tolulopejoel/newsApp/news"
+	"github.com/tolulopejoel/newsApp/internal/api"
+	"github.com/tolulopejoel/newsApp/pkg/news"
 )
 
-func startBackgroundWorkers(ctx context.Context, cfg *apiConfig) {
+func StartBackgroundWorkers(ctx context.Context, cfg *api.ApiConfig) {
 	// scrape for new articles
 	go func() {
 		for {

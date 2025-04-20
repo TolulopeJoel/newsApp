@@ -27,6 +27,7 @@ func FetchNewsArticles(sources []Source) {
 	if dbURL == "" {
 		log.Fatal("DB_URL environment variable is not set")
 	}
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -137,13 +138,12 @@ func getArticlePage(articleLink string) (string, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading response body: %v", err)
+		return "", fmt.Errorf("error reading article body: %w", err)
 	}
 
 	return string(body), nil
 }
 
-// pass article page to go-readability + extract info
 func extractNewsArticleInfo(articlePage string, pageURL *url.URL) (*Article, error) {
 	// Parse the content using readability
 	article, err := readability.FromReader(

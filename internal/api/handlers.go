@@ -1,20 +1,24 @@
-package main
+package api
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/tolulopejoel/newsApp/internal/database"
-	"github.com/tolulopejoel/newsApp/news"
+	"github.com/tolulopejoel/newsApp/pkg/news"
 )
 
-func (apiCfg *apiConfig) handlerGetNews(w http.ResponseWriter, r *http.Request) {
+type ApiConfig struct {
+	DB *database.Queries
+}
+
+func (cfg *ApiConfig) HandlerGetNews(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		respondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
-	articles, err := apiCfg.DB.GetAllPublishedArticles(r.Context())
+	articles, err := cfg.DB.GetAllPublishedArticles(r.Context())
 	if err != nil {
 		respondWithError(
 			w, http.StatusInternalServerError,
@@ -30,10 +34,10 @@ func (apiCfg *apiConfig) handlerGetNews(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, news.ConvertSlice(articles, news.DatabaseArticleToArticle))
 }
 
-func handleReadiness(w http.ResponseWriter, r *http.Request) {
+func HandleReadiness(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Hello, World!"})
 }
 
-func handleError(w http.ResponseWriter, r *http.Request) {
+func HandleError(w http.ResponseWriter, r *http.Request) {
 	respondWithError(w, http.StatusBadRequest, "something went wrong")
 }
