@@ -87,23 +87,21 @@ func FetchNewsArticles(sources []Source) {
 }
 
 // get articles link from news sources rss feed
-func getLinksFromRSS(source string) ([]*url.URL, error) {
+func getLinksFromRSS(feedURL string) ([]*url.URL, error) {
 	fp := gofeed.NewParser()
-	feed, err := fp.ParseURL(source)
+	feed, err := fp.ParseURL(feedURL)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing RSS feed: %v", err)
+		return nil, fmt.Errorf("error parsing feed: %w", err)
 	}
 
-	var links []*url.URL
+	links := make([]*url.URL, 0, len(feed.Items))
 	for _, item := range feed.Items {
-		if item.Link != "" {
-			parsedURL, err := url.Parse(item.Link)
-			if err != nil {
-				log.Println("Skipping invalid URL:", item.Link)
-				continue
-			}
-			links = append(links, parsedURL)
+		link, err := url.Parse(item.Link)
+		if err != nil {
+			log.Printf("Error parsing URL %s: %v", item.Link, err)
+			continue
 		}
+		links = append(links, link)
 	}
 
 	return links, nil
