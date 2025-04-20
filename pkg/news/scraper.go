@@ -8,12 +8,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/tolulopejoel/newsApp/internal/database"
 
 	readability "github.com/go-shiori/go-readability"
 	"github.com/mmcdole/gofeed"
@@ -98,21 +94,19 @@ func getLinksFromRSS(feedURL string) ([]*url.URL, error) {
 
 // get the content on the article page
 func getArticlePage(articleLink string) (string, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := getHttpClient()
 
+	// Create request
 	req, err := http.NewRequest("GET", articleLink, nil)
 	if err != nil {
 		return "", fmt.Errorf("error creating request: %v", err)
 	}
 
-	// Add headers to make the request look more like a browser
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	// Add standard headers
+	headers := getStandardHeaders()
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
